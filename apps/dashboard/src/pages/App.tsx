@@ -1,4 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { AuthLayout } from '../layouts/AuthLayout';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Checkbox } from '../components/ui/Checkbox';
+import { Card } from '../components/ui/Card';
+import { Alert } from '../components/ui/Alert';
+
+const API_BASE =
+  import.meta.env.VITE_API_BASE ?? 'https://pentegra-api.krkmzglmstf.workers.dev/api';
 
 type Me = {
   user_id: string;
@@ -17,15 +30,19 @@ type Order = {
   created_at: string;
 };
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ?? 'https://pentegra-api.krkmzglmstf.workers.dev/api';
-
 type LoginRole = 'admin' | 'restaurant';
 
 type StoredSession = {
   token: string;
   remember: boolean;
 };
+
+const schema = z.object({
+  email: z.string().email('Gecerli bir e-posta girin.'),
+  password: z.string().min(6, 'Sifre en az 6 karakter olmalidir.')
+});
+
+type LoginValues = z.infer<typeof schema>;
 
 function loadSession(): StoredSession | null {
   const raw = localStorage.getItem('session') ?? sessionStorage.getItem('session');
@@ -58,12 +75,23 @@ export function App() {
   const [rememberMe, setRememberMe] = useState<boolean>(stored?.remember ?? true);
   const [me, setMe] = useState<Me | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loginState, setLoginState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [loginError, setLoginError] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<LoginRole>('admin');
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue
+  } = useForm<LoginValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
 
   useEffect(() => {
     if (!token) {
@@ -102,24 +130,20 @@ export function App() {
   const roleLabel = useMemo(() => (me ? `${me.role}` : 'guest'), [me]);
   const greetingName = useMemo(() => (me ? me.user_id.slice(0, 6) : 'Kullanici'), [me]);
 
-  async function login(event: React.FormEvent) {
-    event.preventDefault();
-    setLoginState('loading');
+  async function onSubmit(values: LoginValues) {
     setLoginError('');
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify(values)
     });
     const data = (await res.json()) as ApiResponse<{ token: string }>;
     if (data.ok && data.data?.token) {
       const session = { token: data.data.token, remember: rememberMe };
       persistSession(session);
       setToken(data.data.token);
-      setLoginState('success');
     } else {
-      setLoginState('error');
-      setLoginError(data.error?.message ?? 'Giris basarisiz');
+      setLoginError(data.error?.message ?? 'E-posta veya sifre hatali.');
     }
   }
 
@@ -127,150 +151,117 @@ export function App() {
     clearSession();
     setToken(null);
     setMe(null);
-    setLoginState('idle');
   }
 
   function fillDemo(role: LoginRole) {
     setSelectedRole(role);
     if (role === 'admin') {
-      setEmail('admin@demo.local');
-      setPassword('Admin123!');
+      setValue('email', 'admin@demo.local');
+      setValue('password', 'Admin123!');
     } else {
-      setEmail('restoran@demo.local');
-      setPassword('Restoran123!');
+      setValue('email', 'restoran@demo.local');
+      setValue('password', 'Restoran123!');
     }
   }
 
   return (
-    <div className="app-shell" data-theme="light">
+    <div className="app-shell">
       {!token && (
-        <div className="login-container">
-          <div className="background-elements">
-            <div className="gradient-orb orb-1" />
-            <div className="gradient-orb orb-2" />
-            <div className="particle p1" />
-            <div className="particle p2" />
-            <div className="particle p3" />
-            <div className="particle p4" />
-          </div>
-
-          <div />
-          <div className="login-card">
-            <div className="logo-block">
-              <div className="logo-badge">KT</div>
+        <AuthLayout
+          title="Guvenli ve hizli operasyon girisi"
+          subtitle="Canli siparis akisini izle, otomatik atama ile dakikalar icinde servis baslat."
+          bullets={['Canli siparis akisi', 'Otomatik atama', 'Getir/Migros/YS entegrasyonu']}
+        >
+          <Card className="glass-card">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="logo-title">KuryeTakip</h1>
-                <p className="logo-subtitle">Glassmorphism Luxury Dashboard</p>
+                <p className="text-sm text-slate-500 dark:text-slate-300">Giris tipi</p>
+                <h2 className="font-heading text-2xl font-semibold">{selectedRole === 'admin' ? 'Admin' : 'Restoran'}</h2>
               </div>
-            </div>
-
-            <div className="role-selection">
-              <button
-                type="button"
-                className={`role-card ${selectedRole === 'admin' ? 'selected admin' : ''}`}
-                onClick={() => setSelectedRole('admin')}
-              >
-                <div className="role-title">Admin</div>
-                <div className="role-desc">Tumu gor</div>
-              </button>
-              <button
-                type="button"
-                className={`role-card ${selectedRole === 'restaurant' ? 'selected restaurant' : ''}`}
-                onClick={() => setSelectedRole('restaurant')}
-              >
-                <div className="role-title">Restoran</div>
-                <div className="role-desc">Kendi siparislerin</div>
-              </button>
-            </div>
-
-            <form onSubmit={login}>
-              <div className="input-group">
-                <span className="input-icon">?</span>
-                <input
-                  className={`input-field ${loginState === 'error' ? 'input-error' : ''}`}
-                  type="email"
-                  placeholder=""
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <span className="input-label">E-posta</span>
-                {loginState === 'error' && loginError && (
-                  <span className="field-error">{loginError}</span>
-                )}
-              </div>
-
-              <div className="input-group">
-                <span className="input-icon">??</span>
-                <input
-                  className={`input-field ${loginState === 'error' ? 'input-error' : ''}`}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder=""
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <span className="input-label">Sifre</span>
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  className="toggle-password"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() => setSelectedRole('admin')}
+                  className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                    selectedRole === 'admin'
+                      ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 text-white shadow-glow'
+                      : 'bg-white/70 text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  {showPassword ? 'Gizle' : 'Goster'}
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('restaurant')}
+                  className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                    selectedRole === 'restaurant'
+                      ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-400 text-white shadow-glow'
+                      : 'bg-white/70 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Restoran
+                </button>
+              </div>
+            </div>
+
+            {loginError && <Alert className="mt-6" tone="error">{loginError}</Alert>}
+
+            <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+              <Input
+                label="E-posta"
+                type="email"
+                placeholder="ornek@firma.com"
+                icon={<Mail className="h-4 w-4" />}
+                error={errors.email?.message}
+                {...register('email')}
+              />
+              <Input
+                label="Sifre"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="********"
+                icon={<Lock className="h-4 w-4" />}
+                action={
+                  <button
+                    type="button"
+                    className="text-slate-400 hover:text-slate-600"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Sifreyi gizle' : 'Sifreyi goster'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                }
+                error={errors.password?.message}
+                hint={capsLockOn ? 'Caps Lock acik.' : undefined}
+                onKeyUp={(event) => setCapsLockOn(event.getModifierState('CapsLock'))}
+                {...register('password')}
+              />
+
+              <div className="flex items-center justify-between text-sm">
+                <Checkbox label="Beni hatirla" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+                <button type="button" className="text-brand-500 hover:text-brand-600" aria-disabled>
+                  Sifremi unuttum
                 </button>
               </div>
 
-              <div className="login-options">
-                <label className="remember">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  Beni hatirla
-                </label>
-                <a className="link" href="#">
-                  Sifremi unuttum
-                </a>
-              </div>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Giris yapiliyor...' : 'Giris yap'}
+              </Button>
 
-              <button
-                className={`login-button ${loginState === 'loading' ? 'loading' : ''} ${
-                  loginState === 'success' ? 'success' : ''
-                }`}
-                type="submit"
-                disabled={loginState === 'loading'}
-              >
-                {loginState === 'loading'
-                  ? 'Giris Yapiliyor...'
-                  : loginState === 'success'
-                    ? 'Basarili'
-                    : 'Giris Yap'}
-              </button>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Button type="button" variant="secondary" onClick={() => fillDemo('admin')}>
+                  Demo Admin
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => fillDemo('restaurant')}>
+                  Demo Restoran
+                </Button>
+              </div>
             </form>
 
-            <div className="demo-buttons">
-              <button type="button" className="demo-button admin" onClick={() => fillDemo('admin')}>
-                Demo Admin
-              </button>
-              <button
-                type="button"
-                className="demo-button restaurant"
-                onClick={() => fillDemo('restaurant')}
-              >
-                Demo Restoran
-              </button>
-            </div>
-
-            <div className="footer-links">
-              <span className="muted">Hesabin yok?</span>
-              <a className="link bold" href="#">
-                Kayit ol
-              </a>
-            </div>
-          </div>
-          <div />
-        </div>
+            <p className="mt-6 text-xs text-slate-500 dark:text-slate-400">
+              Destek icin yoneticinizle iletisime gecin.
+            </p>
+          </Card>
+        </AuthLayout>
       )}
 
       {token && me && (
@@ -317,12 +308,12 @@ export function App() {
           <main className="main-content">
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="icon-circle">??</div>
+                <div className="icon-circle">TR</div>
                 <div className="value">{orders.length}</div>
                 <div className="label">Toplam Siparis</div>
               </div>
               <div className="stat-card">
-                <div className="icon-circle blue">?</div>
+                <div className="icon-circle blue">OK</div>
                 <div className="value">{orders.filter((o) => o.status === 'COMPLETED').length}</div>
                 <div className="label">Teslim Edilen</div>
               </div>
@@ -330,7 +321,7 @@ export function App() {
 
             <div className="map-container">
               <div id="map">Harita alani</div>
-              <button className="my-location">?</button>
+              <button className="my-location">LOC</button>
             </div>
 
             <h2 className="section-title">Aktif Siparisler</h2>
@@ -356,19 +347,19 @@ export function App() {
 
           <nav className="bottom-nav">
             <a className="nav-item active" href="#">
-              <div className="icon">??</div>
+              <div className="icon">AN</div>
               <span className="label">Ana</span>
             </a>
             <a className="nav-item" href="#">
-              <div className="icon">??</div>
+              <div className="icon">SP</div>
               <span className="label">Siparis</span>
             </a>
             <a className="nav-item" href="#">
-              <div className="icon">??</div>
+              <div className="icon">KR</div>
               <span className="label">Kurye</span>
             </a>
             <a className="nav-item" href="#">
-              <div className="icon">??</div>
+              <div className="icon">AY</div>
               <span className="label">Ayar</span>
             </a>
           </nav>

@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+.bg-auth {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(240, 147, 251, 0.18), transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(245, 87, 108, 0.12), transparent 50%),
+    linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-auth {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.25), transparent 40%),
+      radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.2), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(79, 70, 229, 0.2), transparent 50%),
+      linear-gradient(135deg, #0f172a 0%, #111827 100%);
+  }
+}
+
+.glass-card {
+  @apply border border-white/20 bg-white/80 backdrop-blur-2xl;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    @apply border-white/10 bg-slate-900/70;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.gradient-orb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%);
+  filter: blur(80px);
+  opacity: 0.18;
+}
+
+/* Dashboard legacy layout */
+.dashboard-layout {
+  @apply min-h-screen bg-slate-50 text-slate-900;
+}
+
+.header-bar {
+  @apply fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-white px-6 py-4 shadow-sm;
+}
+
+.header-right {
+  @apply flex items-center gap-3;
+}
+
+.greeting {
+  @apply text-2xl font-semibold;
+}
+
+.status-badge {
+  @apply ml-3 rounded-full bg-red-500 px-2 py-1 text-xs text-white;
+}
+
+.status-badge.online {
+  @apply bg-emerald-500;
+}
+
+.notification {
+  @apply relative text-sm text-slate-600;
+}
+
+.badge-count {
+  @apply absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white;
+}
+
+.pill {
+  @apply rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600;
+}
+
+.ghost-btn {
+  @apply rounded-lg border border-slate-200 px-3 py-1 text-sm text-slate-600;
+}
+
+.sidebar {
+  @apply hidden lg:block lg:min-h-screen lg:w-64 lg:border-r lg:border-slate-200 lg:bg-white lg:px-6 lg:pt-28;
+}
+
+.sidebar-brand {
+  @apply text-lg font-semibold;
+}
+
+.nav-links {
+  @apply mt-6 flex flex-col gap-3 text-sm text-slate-500;
+}
+
+.nav-item.active {
+  @apply text-brand-500 font-semibold;
+}
+
+.main-content {
+  @apply px-6 pb-24 pt-28 lg:ml-64;
+}
+
+.stats-grid {
+  @apply grid gap-4 md:grid-cols-2;
+}
+
+.stat-card {
+  @apply rounded-2xl bg-white p-6 shadow-sm;
+}
+
+.icon-circle {
+  @apply mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100;
+}
+
+.icon-circle.blue {
+  @apply bg-indigo-100;
+}
+
+.value {
+  @apply text-2xl font-semibold;
+}
+
+.label {
+  @apply text-sm text-slate-500;
+}
+
+.map-container {
+  @apply relative mt-6 h-72 overflow-hidden rounded-2xl border border-slate-200 bg-white;
+}
+
+#map {
+  @apply flex h-full items-center justify-center text-sm text-slate-400;
+}
+
+.my-location {
+  @apply absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow;
+}
+
+.section-title {
+  @apply mt-8 text-lg font-semibold;
+}
+
+.orders-list {
+  @apply mt-4 space-y-3;
+}
+
+.order-item {
+  @apply flex items-center justify-between gap-4 rounded-2xl border-l-4 border-blue-500 bg-white p-4 shadow-sm;
+}
+
+.order-meta {
+  @apply mt-1 flex gap-3 text-sm text-slate-500;
+}
+
+.status-badge.pending {
+  @apply bg-red-100 text-red-700;
+}
+
+.accept-order {
+  @apply rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white;
+}
+
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around border-t border-slate-200 bg-white py-3 lg:hidden;
+}
+
+.fab {
+  @apply fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-xl text-white shadow-lg;
+}
+
+.empty {
+  @apply text-sm text-slate-500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
