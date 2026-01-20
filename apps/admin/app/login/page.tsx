@@ -55,13 +55,13 @@ export default function LoginPage() {
         toast.error("Giris basarisiz");
         return;
       }
-      const data = (await res.json()) as { ok?: boolean; data?: { token?: string } } | { token?: string };
-      let token: string | undefined;
-      if ("data" in data) {
-        token = data.data?.token;
-      } else {
-        token = data.token;
-      }
+      const payload = (await res.json()) as unknown;
+      const token =
+        typeof (payload as { data?: { token?: unknown } }).data?.token === "string"
+          ? (payload as { data?: { token?: string } }).data?.token
+          : typeof (payload as { token?: unknown }).token === "string"
+          ? (payload as { token?: string }).token
+          : undefined;
       if (!token) {
         setError("Token alinamadi. Lutfen tekrar deneyin.");
         toast.error("Giris basarisiz");
