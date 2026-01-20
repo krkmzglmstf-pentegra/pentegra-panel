@@ -9,7 +9,8 @@ export const authRoutes = new Hono<{ Bindings: Env }>();
 
 authRoutes.post('/login', async (c) => {
   try {
-    const raw = await c.req.text();
+    const buffer = await c.req.raw.arrayBuffer();
+    const raw = new TextDecoder().decode(buffer);
     let body: unknown;
     const trimmed = raw.trim();
     if (trimmed.includes('{') && trimmed.includes('}')) {
