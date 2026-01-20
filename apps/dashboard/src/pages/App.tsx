@@ -129,67 +129,95 @@ export function App() {
     setLoginState('idle');
   }
 
+  function fillDemo(role: LoginRole) {
+    setSelectedRole(role);
+    if (role === 'admin') {
+      setEmail('admin@demo.local');
+      setPassword('Admin123!');
+    } else {
+      setEmail('restoran@demo.local');
+      setPassword('Restoran123!');
+    }
+  }
+
   return (
     <div className="app-shell" data-theme="light">
       {!token && (
-        <div className="login-screen">
+        <div className="login-container">
+          <div className="background-elements">
+            <div className="gradient-orb orb-1" />
+            <div className="gradient-orb orb-2" />
+            <div className="particle p1" />
+            <div className="particle p2" />
+            <div className="particle p3" />
+            <div className="particle p4" />
+          </div>
+
+          <div />
           <div className="login-card">
-            <div className="login-hero">
-              <div className="login-logo">KuryeTakip</div>
-              <div className="login-subtitle">B2B teslimat operasyon merkezi</div>
+            <div className="logo-block">
+              <div className="logo-badge">KT</div>
+              <div>
+                <h1 className="logo-title">KuryeTakip</h1>
+                <p className="logo-subtitle">Glassmorphism Luxury Dashboard</p>
+              </div>
             </div>
 
-            <div className="role-toggle">
+            <div className="role-selection">
               <button
                 type="button"
-                className={`role-btn ${selectedRole === 'admin' ? 'active' : ''}`}
+                className={`role-card ${selectedRole === 'admin' ? 'selected admin' : ''}`}
                 onClick={() => setSelectedRole('admin')}
               >
-                Admin
+                <div className="role-title">Admin</div>
+                <div className="role-desc">Tumu gor</div>
               </button>
               <button
                 type="button"
-                className={`role-btn ${selectedRole === 'restaurant' ? 'active' : ''}`}
+                className={`role-card ${selectedRole === 'restaurant' ? 'selected restaurant' : ''}`}
                 onClick={() => setSelectedRole('restaurant')}
               >
-                Restoran
+                <div className="role-title">Restoran</div>
+                <div className="role-desc">Kendi siparislerin</div>
               </button>
             </div>
 
-            <form onSubmit={login} className="login-form">
-              <label className="field">
-                E-posta
+            <form onSubmit={login}>
+              <div className="input-group">
+                <span className="input-icon">?</span>
                 <input
-                  className={`input ${loginState === 'error' ? 'input-error' : ''}`}
+                  className={`input-field ${loginState === 'error' ? 'input-error' : ''}`}
                   type="email"
-                  placeholder={selectedRole === 'admin' ? 'admin@demo.local' : 'restoran@demo.local'}
+                  placeholder=""
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
+                <span className="input-label">E-posta</span>
                 {loginState === 'error' && loginError && (
                   <span className="field-error">{loginError}</span>
                 )}
-              </label>
+              </div>
 
-              <label className="field">
-                Sifre
-                <div className="password-wrapper">
-                  <input
-                    className={`input ${loginState === 'error' ? 'input-error' : ''}`}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="********"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="toggle-password"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                  >
-                    {showPassword ? 'Gizle' : 'Goster'}
-                  </button>
-                </div>
-              </label>
+              <div className="input-group">
+                <span className="input-icon">??</span>
+                <input
+                  className={`input-field ${loginState === 'error' ? 'input-error' : ''}`}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder=""
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <span className="input-label">Sifre</span>
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  {showPassword ? 'Gizle' : 'Goster'}
+                </button>
+              </div>
 
               <div className="login-options">
                 <label className="remember">
@@ -206,7 +234,9 @@ export function App() {
               </div>
 
               <button
-                className={`login-btn ${loginState === 'success' ? 'success' : ''}`}
+                className={`login-button ${loginState === 'loading' ? 'loading' : ''} ${
+                  loginState === 'success' ? 'success' : ''
+                }`}
                 type="submit"
                 disabled={loginState === 'loading'}
               >
@@ -217,7 +247,28 @@ export function App() {
                     : 'Giris Yap'}
               </button>
             </form>
+
+            <div className="demo-buttons">
+              <button type="button" className="demo-button admin" onClick={() => fillDemo('admin')}>
+                Demo Admin
+              </button>
+              <button
+                type="button"
+                className="demo-button restaurant"
+                onClick={() => fillDemo('restaurant')}
+              >
+                Demo Restoran
+              </button>
+            </div>
+
+            <div className="footer-links">
+              <span className="muted">Hesabin yok?</span>
+              <a className="link bold" href="#">
+                Kayit ol
+              </a>
+            </div>
           </div>
+          <div />
         </div>
       )}
 
