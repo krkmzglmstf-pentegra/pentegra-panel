@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Checkbox } from '../ui/Checkbox';
@@ -55,11 +55,17 @@ export function LoginCard({
         <div className="absolute -right-16 top-8 h-32 w-32 rounded-full bg-brand-400/20 blur-3xl" />
         <div className="absolute -left-12 bottom-6 h-32 w-32 rounded-full bg-emerald-400/20 blur-3xl" />
       </div>
-      <div className="relative space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Guvenli giris</p>
+      <div className="relative space-y-3">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-300">
+          <Sparkles className="h-3.5 w-3.5 text-brand-500" />
+          Guvenli giris
+        </div>
         <h2 className="font-heading text-2xl font-semibold text-slate-900 dark:text-white">
           Hesabiniza devam edin
         </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-300">
+          Kurye paneline erismek icin kimlik bilgilerinizi girin.
+        </p>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -99,7 +105,11 @@ export function LoginCard({
         </button>
       </div>
 
-      {error && <Alert className="mt-6" tone="error">{error}</Alert>}
+      {error && (
+        <Alert className="mt-6" tone="error">
+          {error}
+        </Alert>
+      )}
 
       <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Input
@@ -134,14 +144,28 @@ export function LoginCard({
         />
 
         <div className="flex items-center justify-between text-sm">
-          <Checkbox label="Beni hatirla" checked={rememberMe} onChange={(e) => onRememberChange(e.target.checked)} />
-          <button type="button" className="text-brand-500 hover:text-brand-600" aria-disabled>
+          <Checkbox
+            label="Beni hatirla"
+            checked={rememberMe}
+            onChange={(e) => onRememberChange(e.target.checked)}
+          />
+          <button
+            type="button"
+            className="text-brand-500 transition hover:text-brand-600"
+            aria-disabled
+          >
             Sifremi unuttum
           </button>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting} aria-busy={isSubmitting}>
-          {isSubmitting ? 'Giris yapiliyor...' : 'Giris yap'}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+          isLoading={isSubmitting}
+          aria-busy={isSubmitting}
+        >
+          Giris yap
         </Button>
       </form>
 

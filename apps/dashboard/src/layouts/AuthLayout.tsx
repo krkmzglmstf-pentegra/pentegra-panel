@@ -11,7 +11,7 @@ export type AuthLayoutProps = {
 
 export function AuthLayout({ children, title, subtitle, bullets }: AuthLayoutProps) {
   return (
-    <div className="bg-auth min-h-screen">
+    <div className="bg-home min-h-screen">
       <div className="relative min-h-screen px-6 py-10 lg:px-16">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="gradient-orb absolute -top-40 -left-40 h-[420px] w-[420px] rounded-full" />

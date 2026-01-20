@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 
 type PublicHomeLayoutProps = {
   children: React.ReactNode;
@@ -8,28 +8,50 @@ type PublicHomeLayoutProps = {
 
 export function PublicHomeLayout({ children }: PublicHomeLayoutProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-auth">
-      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-brand-400/25 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-24 bottom-12 h-72 w-72 rounded-full bg-pink-400/25 blur-[120px]" />
-      <div className="pointer-events-none absolute left-1/2 top-10 h-64 w-64 -translate-x-1/2 rounded-full gradient-orb" />
+    <div className="relative min-h-screen overflow-hidden bg-home">
+      <div className="pointer-events-none absolute -left-40 top-12 h-72 w-72 rounded-full bg-brand-400/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-pink-400/20 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/2 top-10 h-72 w-72 -translate-x-1/2 rounded-full gradient-orb" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 pt-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 via-violet-500 to-pink-500 text-sm font-bold text-white shadow-glow">
+            KP
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Kurye Panel</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Operasyon kontrol merkezi</p>
+          </div>
+        </div>
+        <div className="hidden items-center gap-3 text-xs text-slate-500 dark:text-slate-400 md:flex">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/70 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/50">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            99.9% uptime
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/70 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/50">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            ISO-ready security
+          </span>
+        </div>
+      </header>
+
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:py-16">
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-3 rounded-full border border-white/40 bg-white/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-300">
-            Kurye Panel
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/40 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-300">
+            Premium Ops Suite
           </div>
           <div className="space-y-4">
             <h1 className="font-heading text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
               Siparis operasyonlarini tek panelde hizlandir.
             </h1>
             <p className="max-w-xl text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-              Restoran ve kurye is akisini canli takip edin. Otomatik onay ve atama ile dakika
-              kazanin.
+              Restoran ve kurye is akisini canli takip edin. Otomatik onay, atama ve bildirimlerle
+              dakikalar kazanin.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -66,13 +88,13 @@ export function PublicHomeLayout({ children }: PublicHomeLayoutProps) {
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
             <span className="rounded-full border border-white/50 bg-white/60 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-              99.9% uptime
+              2 dk ortalama onay
             </span>
             <span className="rounded-full border border-white/50 bg-white/60 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-              ISO-ready security
+              Otomatik dispatch
             </span>
             <span className="rounded-full border border-white/50 bg-white/60 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-              24/7 monitoring
+              KVKK uyumlu
             </span>
           </div>
         </motion.section>

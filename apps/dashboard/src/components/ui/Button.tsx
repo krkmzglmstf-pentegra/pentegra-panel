@@ -4,10 +4,11 @@ import { cn } from '../../lib/cn';
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md';
+  isLoading?: boolean;
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', isLoading = false, children, ...props }, ref) => {
     const base =
       'inline-flex items-center justify-center rounded-xl font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 disabled:cursor-not-allowed disabled:opacity-60';
     const variants = {
@@ -26,7 +27,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(base, variants[variant], sizes[size], className)}
         {...props}
-      />
+      >
+        {isLoading && (
+          <span className="mr-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+        )}
+        <span className={cn(isLoading && 'opacity-90')}>{children}</span>
+      </button>
     );
   }
 );

@@ -18,7 +18,7 @@ body {
   }
 }
 
-.bg-auth {
+.bg-home {
   background:
     radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.15), transparent 40%),
     radial-gradient(circle at 80% 10%, rgba(240, 147, 251, 0.18), transparent 45%),
@@ -27,7 +27,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .bg-auth {
+  .bg-home {
     background:
       radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.25), transparent 40%),
       radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.2), transparent 45%),
@@ -37,8 +37,8 @@ body {
 }
 
 .glass-card {
-  @apply border border-white/20 bg-white/80 backdrop-blur-2xl;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  @apply border border-white/30 bg-white/80 backdrop-blur-2xl;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
 }
 
 @media (prefers-color-scheme: dark) {
