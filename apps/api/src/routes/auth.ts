@@ -40,7 +40,11 @@ authRoutes.post('/login', async (c) => {
           error: {
             code: ErrorCodes.VALIDATION,
             message: 'invalid payload',
-            details: parsed.error.flatten()
+            details: {
+              issues: parsed.error.flatten(),
+              rawLength: raw.length,
+              contentType: c.req.header('content-type') ?? null
+            }
           }
         },
         400
