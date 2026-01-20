@@ -64,7 +64,10 @@ authRoutes.post('/login', async (c) => {
   } catch (error) {
     console.error('auth_login_failed', { error: String(error) });
     return c.json(
-      { ok: false, error: { code: ErrorCodes.INTERNAL, message: 'internal error' } },
+      {
+        ok: false,
+        error: { code: ErrorCodes.INTERNAL, message: 'internal error', details: String(error) }
+      },
       500
     );
   }
