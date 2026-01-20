@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "../styles/tokens.css";
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  font-feature-settings: "ss01" on, "ss02" on, "cv01" on, "cv02" on;
+}
+
+* {
+  @apply border-border;
+}
+
+.gradient-surface {
+  background: radial-gradient(circle at top, rgba(99, 102, 241, 0.12), transparent 55%),
+    radial-gradient(circle at 20% 30%, rgba(14, 116, 144, 0.12), transparent 50%),
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+}
+
+.glass-panel {
+  background: hsl(var(--card) / 0.7);
+  border: 1px solid hsl(var(--border) / 0.6);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
