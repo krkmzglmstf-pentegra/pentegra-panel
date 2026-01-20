@@ -71,11 +71,21 @@ export function Home() {
     fetch(`${API_BASE}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then((res) => res.json() as Promise<ApiResponse<Me>>)
-      .then((res) => {
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as ApiResponse<Me> | Me | null;
         if (cancelled) return;
-        if (res.ok && res.data) {
-          setMe(res.data);
+        if (!response.ok) {
+          clearSession();
+          setToken(null);
+          setMe(null);
+          return;
+        }
+        if (payload && 'data' in payload && payload.data) {
+          setMe(payload.data);
+          return;
+        }
+        if (payload && 'user_id' in payload) {
+          setMe(payload as Me);
           return;
         }
         clearSession();
