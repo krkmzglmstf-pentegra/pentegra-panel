@@ -88,6 +88,7 @@ wrangler d1 execute pentegra_db --file .\scripts\seed.sql --remote
 Demo credentials:
 - Admin: `admin@demo.local` / `Admin123!`
 - Restaurant: `restoran@demo.local` / `Restoran123!`
+- Admin (pos): `pos@pentegra.com.tr` / `123456`
 
 ## Warning
 Never store real `x-api-key`, basic auth, tokens, or secrets in repo. Use D1 ciphertext or `wrangler secret`.

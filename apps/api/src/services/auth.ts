@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { JwtClaimsSchema, type JwtClaims } from '@pentegra/shared';
 
-const PBKDF2_ITERATIONS = 120000;
+const PBKDF2_ITERATIONS = 100000;
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
