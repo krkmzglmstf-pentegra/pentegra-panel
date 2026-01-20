@@ -19,16 +19,50 @@ type Order = {
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
+type LoginRole = 'admin' | 'restaurant';
+
+type StoredSession = {
+  token: string;
+  remember: boolean;
+};
+
+function loadSession(): StoredSession | null {
+  const raw = localStorage.getItem('session') ?? sessionStorage.getItem('session');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as StoredSession;
+  } catch {
+    return null;
+  }
+}
+
+function persistSession(session: StoredSession) {
+  if (session.remember) {
+    localStorage.setItem('session', JSON.stringify(session));
+    sessionStorage.removeItem('session');
+  } else {
+    sessionStorage.setItem('session', JSON.stringify(session));
+    localStorage.removeItem('session');
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem('session');
+  sessionStorage.removeItem('session');
+}
+
 export function App() {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const stored = loadSession();
+  const [token, setToken] = useState<string | null>(stored?.token ?? null);
+  const [rememberMe, setRememberMe] = useState<boolean>(stored?.remember ?? true);
   const [me, setMe] = useState<Me | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [events, setEvents] = useState<string[]>([]);
   const [loginState, setLoginState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [loginError, setLoginError] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<LoginRole>('admin');
 
   useEffect(() => {
     if (!token) {
@@ -64,23 +98,6 @@ export function App() {
       .catch(() => setOrders([]));
   }, [token, me]);
 
-  useEffect(() => {
-    if (!token || !me) return;
-    let endpoint = '';
-    if (me.role === 'admin' || me.role === 'ops') {
-      endpoint = `${API_BASE}/stream/admin?token=${encodeURIComponent(token)}`;
-    } else if (me.role === 'restaurant' && me.restaurant_id) {
-      endpoint = `${API_BASE}/stream/restaurants/${me.restaurant_id}?token=${encodeURIComponent(token)}`;
-    }
-    if (!endpoint) return;
-
-    const eventSource = new EventSource(endpoint, { withCredentials: false });
-    eventSource.onmessage = (evt) => {
-      setEvents((prev) => [evt.data, ...prev].slice(0, 20));
-    };
-    return () => eventSource.close();
-  }, [token, me]);
-
   const roleLabel = useMemo(() => (me ? `${me.role}` : 'guest'), [me]);
   const greetingName = useMemo(() => (me ? me.user_id.slice(0, 6) : 'Kullanici'), [me]);
 
@@ -95,7 +112,8 @@ export function App() {
     });
     const data = (await res.json()) as ApiResponse<{ token: string }>;
     if (data.ok && data.data?.token) {
-      localStorage.setItem('token', data.data.token);
+      const session = { token: data.data.token, remember: rememberMe };
+      persistSession(session);
       setToken(data.data.token);
       setLoginState('success');
     } else {
@@ -105,7 +123,7 @@ export function App() {
   }
 
   function logout() {
-    localStorage.removeItem('token');
+    clearSession();
     setToken(null);
     setMe(null);
     setLoginState('idle');
@@ -118,6 +136,24 @@ export function App() {
           <div className="login-card">
             <div className="login-hero">
               <div className="login-logo">KuryeTakip</div>
+              <div className="login-subtitle">B2B teslimat operasyon merkezi</div>
+            </div>
+
+            <div className="role-toggle">
+              <button
+                type="button"
+                className={`role-btn ${selectedRole === 'admin' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('admin')}
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${selectedRole === 'restaurant' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('restaurant')}
+              >
+                Restoran
+              </button>
             </div>
 
             <form onSubmit={login} className="login-form">
@@ -126,7 +162,7 @@ export function App() {
                 <input
                   className={`input ${loginState === 'error' ? 'input-error' : ''}`}
                   type="email"
-                  placeholder="ornek@firma.com"
+                  placeholder={selectedRole === 'admin' ? 'admin@demo.local' : 'restoran@demo.local'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -155,6 +191,20 @@ export function App() {
                 </div>
               </label>
 
+              <div className="login-options">
+                <label className="remember">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  Beni hatirla
+                </label>
+                <a className="link" href="#">
+                  Sifremi unuttum
+                </a>
+              </div>
+
               <button
                 className={`login-btn ${loginState === 'success' ? 'success' : ''}`}
                 type="submit"
@@ -166,25 +216,6 @@ export function App() {
                     ? 'Basarili'
                     : 'Giris Yap'}
               </button>
-
-              <div className="separator">veya</div>
-
-              <button type="button" className="social-btn">
-                Google ile devam et
-              </button>
-              <button type="button" className="social-btn">
-                Apple ile devam et
-              </button>
-
-              <div className="links">
-                <a className="link" href="#">
-                  Sifremi unuttum
-                </a>
-                <span className="muted">Hesabin yok?</span>
-                <a className="link bold" href="#">
-                  Kayit ol
-                </a>
-              </div>
             </form>
           </div>
         </div>
@@ -196,8 +227,8 @@ export function App() {
             <div className="header-left">
               <h1 className="greeting">
                 Merhaba, {greetingName}!
-                <span className={`status-badge ${events.length ? 'online' : 'offline'}`}>
-                  {events.length ? 'online' : 'offline'}
+                <span className={`status-badge ${orders.length ? 'online' : 'offline'}`}>
+                  {orders.length ? 'online' : 'offline'}
                 </span>
               </h1>
             </div>
