@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function IntegrationsPage() {
   const { data, isLoading, isError } = useQuery({
@@ -63,14 +64,21 @@ export default function IntegrationsPage() {
             </div>
             <div className="space-y-2">
               <Label>API Key</Label>
-              <Input value={item.apiKeyMasked} readOnly />
+              <Input placeholder="Yeni API Key girin" />
+              <p className="text-xs text-muted-foreground">Mevcut: {item.apiKeyMasked}</p>
             </div>
             <div className="space-y-2">
               <Label>API Secret</Label>
-              <Input value={item.apiSecretMasked} readOnly />
+              <Input placeholder="Yeni API Secret girin" type="password" />
+              <p className="text-xs text-muted-foreground">Mevcut: {item.apiSecretMasked}</p>
             </div>
             <p className="text-xs text-muted-foreground">Son kontrol: {item.lastChecked}</p>
-            <Button variant="secondary">Baglantiyi test et</Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => toast.success("Baglanti testi basladi")}>
+                Baglantiyi test et
+              </Button>
+              <Button onClick={() => toast.success("Entegrasyon guncellendi")}>Kaydet</Button>
+            </div>
           </Card>
         ))}
       </div>
