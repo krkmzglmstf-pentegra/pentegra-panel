@@ -17,7 +17,8 @@ type Order = {
   created_at: string;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
+const API_BASE =
+  import.meta.env.VITE_API_BASE ?? 'https://pentegra-api.krkmzglmstf.workers.dev/api';
 
 type LoginRole = 'admin' | 'restaurant';
 
