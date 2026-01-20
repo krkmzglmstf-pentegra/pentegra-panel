@@ -18,13 +18,34 @@ import { toast } from "sonner";
 export default function RestaurantOrdersPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["restaurant-orders"],
-    queryFn: () => apiGet<Order[]>("/api/mock/restaurant/orders")
+    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/restaurant/orders")
   });
 
   if (isLoading) return <LoadingBlock />;
   if (isError || !data) {
     return <EmptyState title="Siparisler yuklenemedi" description="Mock API erisimi saglanamadi." />;
   }
+
+  const orders: Order[] = (data.data ?? []).map((o) => ({
+    id: o.id,
+    restaurant: o.restaurant_id ?? "Restoran",
+    platform: o.platform === "getir" ? "Getir" : o.platform === "migros" ? "Migros" : "Yemeksepeti",
+    status:
+      o.status === "RECEIVED"
+        ? "Yeni"
+        : o.status === "NEW_PENDING"
+          ? "Onay Bekliyor"
+          : o.status === "APPROVED" || o.status === "PREPARED"
+            ? "Hazirlaniyor"
+            : o.status === "DELIVERY" || o.status === "ASSIGNED"
+              ? "Yolda"
+              : o.status === "COMPLETED"
+                ? "Teslim"
+                : "Iptal",
+    createdAt: o.created_at,
+    totalPrice: 0,
+    address: o.delivery_provider ?? "-"
+  }));
 
   return (
     <div className="space-y-6">
@@ -55,7 +76,7 @@ export default function RestaurantOrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((order) => (
+            {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">#{order.id}</TableCell>
                 <TableCell>

@@ -7,8 +7,8 @@ import { getAuthUser } from "@/lib/auth";
 
 export function TopBar() {
   const user = getAuthUser();
-  const companyName = user?.tenant ?? "Kurye Firmasi";
-  const restaurantName = user?.restaurant;
+  const companyName = user?.tenantId ? `Firma ${user.tenantId.slice(0, 6)}` : "Kurye Firmasi";
+  const restaurantName = user?.restaurantId ? `Restoran ${user.restaurantId.slice(0, 6)}` : undefined;
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-border/70 bg-card/80 px-4 py-4 shadow-soft">
       <div className="flex flex-wrap items-center gap-3">

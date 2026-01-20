@@ -1,9 +1,9 @@
 export type AuthUser = {
   id: string;
-  name: string;
+  name?: string;
   role: "admin" | "restaurant";
-  tenant: string;
-  restaurant?: string;
+  tenantId?: string;
+  restaurantId?: string;
 };
 
 const TOKEN_KEY = "admin_auth_token";

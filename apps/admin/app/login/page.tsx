@@ -45,24 +45,41 @@ export default function LoginPage() {
   const onSubmit = async (values: FormValues) => {
     setError(null);
     try {
-      const res = await fetch("/api/mock/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
+        body: JSON.stringify({ email: values.email, password: values.password })
       });
       if (!res.ok) {
         setError("Giris basarisiz. Bilgileri kontrol edin.");
         toast.error("Giris basarisiz");
         return;
       }
-      const data = (await res.json()) as { token: string; user: { id: string; name: string; tenant: string; restaurant?: string } };
-      saveAuth(data.token, {
-        ...data.user,
-        role: values.role,
-        restaurant: data.user.restaurant
+      const data = (await res.json()) as { ok?: boolean; data?: { token?: string } } | { token?: string };
+      const token = "data" in data ? data.data?.token : data.token;
+      if (!token) {
+        setError("Token alinamadi. Lutfen tekrar deneyin.");
+        toast.error("Giris basarisiz");
+        return;
+      }
+      const meRes = await fetch("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!meRes.ok) {
+        setError("Kullanici bilgileri alinamadi.");
+        toast.error("Giris basarisiz");
+        return;
+      }
+      const mePayload = (await meRes.json()) as { ok?: boolean; data?: any } | any;
+      const me = "data" in mePayload ? mePayload.data : mePayload;
+      saveAuth(token, {
+        id: me.user_id,
+        role: me.role,
+        tenantId: me.tenant_id,
+        restaurantId: me.restaurant_id
       });
       toast.success("Giris basarili");
-      router.replace(values.role === "restaurant" ? "/app/restaurant/dashboard" : "/app/dashboard");
+      router.replace(me.role === "restaurant" ? "/app/restaurant/dashboard" : "/app/dashboard");
     } catch {
       setError("Sunucuya baglanilamadi. Lutfen tekrar deneyin.");
       toast.error("Baglanti hatasi");
@@ -117,26 +134,6 @@ export default function LoginPage() {
           )}
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { key: "admin", title: "Admin", desc: "Tum operasyonu yonet" },
-                { key: "restaurant", title: "Restoran", desc: "Siparislerini takip et" }
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                    watch("role") === item.key
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-background text-muted-foreground hover:bg-muted"
-                  }`}
-                  onClick={() => setValue("role", item.key as "admin" | "restaurant")}
-                >
-                  <p className="text-base font-semibold">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
-                </button>
-              ))}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
               <div className="relative">

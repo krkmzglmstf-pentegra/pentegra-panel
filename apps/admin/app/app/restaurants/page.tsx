@@ -20,7 +20,7 @@ import { toast } from "sonner";
 export default function RestaurantsPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["restaurants"],
-    queryFn: () => apiGet<Restaurant[]>("/api/mock/restaurants")
+    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/admin/restaurants")
   });
 
   if (isLoading) return <LoadingBlock />;
@@ -28,6 +28,16 @@ export default function RestaurantsPage() {
     return <EmptyState title="Restoranlar yuklenemedi" description="Mock API erisimi saglanamadi." />;
   }
 
+  const restaurants: Restaurant[] = (data.data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    platformRestaurantId: r.platform_restaurant_id ?? "-",
+    platform: r.platform === "getir" ? "Getir" : r.platform === "migros" ? "Migros" : "Yemeksepeti",
+    lat: r.lat ?? 0,
+    lon: r.lon ?? 0,
+    autoApprove: Boolean(r.auto_approve),
+    autoPrint: Boolean(r.auto_print)
+  }));
   return (
     <div className="space-y-6">
       <PageHeader
@@ -103,7 +113,7 @@ export default function RestaurantsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((restaurant) => (
+            {restaurants.map((restaurant) => (
               <TableRow key={restaurant.id}>
                 <TableCell className="font-medium">{restaurant.name}</TableCell>
                 <TableCell>

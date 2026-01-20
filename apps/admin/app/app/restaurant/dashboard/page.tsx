@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
-import type { RestaurantDashboardSnapshot } from "@/types";
+import type { Order } from "@/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -12,13 +12,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { LoadingBlock } from "@/components/shared/loading-block";
 
 export default function RestaurantDashboardPage() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["restaurant-dashboard"],
-    queryFn: () => apiGet<RestaurantDashboardSnapshot>("/api/mock/restaurant/dashboard")
+  const { data: ordersData, isLoading, isError } = useQuery({
+    queryKey: ["restaurant-orders"],
+    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/restaurant/orders")
   });
 
   if (isLoading) return <LoadingBlock />;
-  if (isError || !data) {
+  if (isError || !ordersData) {
     return (
       <EmptyState
         title="Restoran dashboard verisi alinamadi"
@@ -26,6 +26,33 @@ export default function RestaurantDashboardPage() {
       />
     );
   }
+
+  const orders: Order[] = (ordersData.data ?? []).map((o) => ({
+    id: o.id,
+    restaurant: o.restaurant_id ?? "Restoran",
+    platform: o.platform === "getir" ? "Getir" : o.platform === "migros" ? "Migros" : "Yemeksepeti",
+    status:
+      o.status === "RECEIVED"
+        ? "Yeni"
+        : o.status === "NEW_PENDING"
+          ? "Onay Bekliyor"
+          : o.status === "APPROVED" || o.status === "PREPARED"
+            ? "Hazirlaniyor"
+            : o.status === "DELIVERY" || o.status === "ASSIGNED"
+              ? "Yolda"
+              : o.status === "COMPLETED"
+                ? "Teslim"
+                : "Iptal",
+    createdAt: o.created_at,
+    totalPrice: 0,
+    address: o.delivery_provider ?? "-"
+  }));
+
+  const todaysOrders = orders.length;
+  const pendingOrders = orders.filter((o) => o.status === "Onay Bekliyor").length;
+  const inDelivery = orders.filter((o) => o.status === "Yolda").length;
+  const avgPrepMinutes = 0;
+  const liveOrders = orders.slice(0, 6);
 
   return (
     <div className="space-y-6">
@@ -35,10 +62,10 @@ export default function RestaurantDashboardPage() {
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Bugunku Siparis" value={data.stats.todaysOrders} />
-        <StatCard label="Onay Bekleyen" value={data.stats.pendingOrders} />
-        <StatCard label="Yolda" value={data.stats.inDelivery} />
-        <StatCard label="Ortalama Hazirlik" value={`${data.stats.avgPrepMinutes} dk`} />
+        <StatCard label="Bugunku Siparis" value={todaysOrders} />
+        <StatCard label="Onay Bekleyen" value={pendingOrders} />
+        <StatCard label="Yolda" value={inDelivery} />
+        <StatCard label="Ortalama Hazirlik" value={`${avgPrepMinutes} dk`} />
       </section>
 
       <Card>
@@ -46,7 +73,7 @@ export default function RestaurantDashboardPage() {
           <CardTitle>Canli Siparis Akisi</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {data.liveOrders.map((order) => (
+          {liveOrders.map((order) => (
             <div
               key={order.id}
               className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-4 py-3 text-sm"

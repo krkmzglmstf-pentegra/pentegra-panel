@@ -21,13 +21,43 @@ export default function OrdersPage() {
   const [selected, setSelected] = React.useState<Order | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => apiGet<Order[]>("/api/mock/orders")
+    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/admin/orders")
+  });
+  const { data: restaurants } = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/admin/restaurants")
   });
 
   if (isLoading) return <LoadingBlock />;
   if (isError || !data) {
-    return <EmptyState title="Siparisler yuklenemedi" description="Mock API erisimi saglanamadi." />;
+    return <EmptyState title="Siparisler yuklenemedi" description="API erisimi saglanamadi." />;
   }
+
+  const restaurantMap = new Map<string, string>();
+  for (const r of restaurants?.data ?? []) {
+    restaurantMap.set(r.id, r.name);
+  }
+
+  const orders: Order[] = (data.data ?? []).map((o) => ({
+    id: o.id,
+    restaurant: restaurantMap.get(o.restaurant_id) ?? o.restaurant_id ?? "Bilinmeyen Restoran",
+    platform: o.platform === "getir" ? "Getir" : o.platform === "migros" ? "Migros" : "Yemeksepeti",
+    status:
+      o.status === "RECEIVED"
+        ? "Yeni"
+        : o.status === "NEW_PENDING"
+          ? "Onay Bekliyor"
+          : o.status === "APPROVED" || o.status === "PREPARED"
+            ? "Hazirlaniyor"
+            : o.status === "DELIVERY" || o.status === "ASSIGNED"
+              ? "Yolda"
+              : o.status === "COMPLETED"
+                ? "Teslim"
+                : "Iptal",
+    createdAt: o.created_at,
+    totalPrice: 0,
+    address: o.delivery_provider ?? "-"
+  }));
 
   return (
     <div className="space-y-6">
@@ -46,8 +76,11 @@ export default function OrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tum restoranlar</SelectItem>
-              <SelectItem value="r1">Burger House</SelectItem>
-              <SelectItem value="r2">Sushi Lab</SelectItem>
+              {(restaurants?.data ?? []).map((r: any) => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select>
@@ -88,7 +121,7 @@ export default function OrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((order) => (
+            {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className="font-medium">#{order.id}</TableCell>
                 <TableCell>{order.restaurant}</TableCell>
