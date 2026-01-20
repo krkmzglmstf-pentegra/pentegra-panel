@@ -9,7 +9,17 @@ export const authRoutes = new Hono<{ Bindings: Env }>();
 
 authRoutes.post('/login', async (c) => {
   try {
-    const body = await c.req.json();
+    const raw = await c.req.text();
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      const params = new URLSearchParams(raw);
+      body = {
+        email: params.get('email'),
+        password: params.get('password')
+      };
+    }
     const parsed = LoginRequestSchema.safeParse(body);
     if (!parsed.success) {
       return c.json(
