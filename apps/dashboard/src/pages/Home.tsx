@@ -27,6 +27,21 @@ type StoredSession = {
   remember: boolean;
 };
 
+function decodeJwtClaims(token: string): Me | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const json = atob(padded);
+    const payload = JSON.parse(json) as Partial<Me>;
+    if (!payload.user_id || !payload.role) return null;
+    return payload as Me;
+  } catch {
+    return null;
+  }
+}
+
 function loadSession(): StoredSession | null {
   const raw = localStorage.getItem('session') ?? sessionStorage.getItem('session');
   if (!raw) return null;
@@ -86,6 +101,11 @@ export function Home() {
         }
         if (payload && 'user_id' in payload) {
           setMe(payload as Me);
+          return;
+        }
+        const fallback = decodeJwtClaims(token);
+        if (fallback) {
+          setMe(fallback);
           return;
         }
         clearSession();
