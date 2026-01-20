@@ -9,7 +9,7 @@ LOG_LEVEL = "info"
 [[d1_databases]]
 binding = "DB"
 database_name = "pentegra_db"
-database_id = "__YOUR_D1_DATABASE_ID__"
+database_id = "feed5a49-7854-452c-8cb3-19b487346135"
 
 [[queues.producers]]
 binding = "ORDER_QUEUE"
