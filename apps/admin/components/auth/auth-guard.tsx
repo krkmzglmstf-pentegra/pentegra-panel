@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { getAuthToken } from "@/lib/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { getAuthToken, getAuthUser } from "@/lib/auth";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -14,8 +15,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
+    const user = getAuthUser();
+    if (user?.role === "restaurant" && pathname.startsWith("/app/") && !pathname.startsWith("/app/restaurant")) {
+      router.replace("/app/restaurant/dashboard");
+      return;
+    }
+    if (user?.role === "admin" && pathname.startsWith("/app/restaurant")) {
+      router.replace("/app/dashboard");
+      return;
+    }
     setReady(true);
-  }, [router]);
+  }, [router, pathname]);
 
   if (!ready) {
     return (

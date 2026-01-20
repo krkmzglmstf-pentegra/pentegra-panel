@@ -4,7 +4,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { navItems } from "./navigation";
+import { getNavItems } from "./navigation";
+import { getAuthUser } from "@/lib/auth";
 import { Plus, Search } from "lucide-react";
 
 const actions = [
@@ -16,6 +17,8 @@ const actions = [
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
+  const user = getAuthUser();
+  const navItems = getNavItems(user?.role ?? "admin");
 
   React.useEffect(() => {
     const handler = (event: KeyboardEvent) => {

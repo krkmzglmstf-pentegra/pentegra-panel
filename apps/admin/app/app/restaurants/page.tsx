@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlatformBadge } from "@/components/shared/platform-badge";
+import { toast } from "sonner";
 
 export default function RestaurantsPage() {
   const { data, isLoading, isError } = useQuery({
@@ -81,7 +82,9 @@ export default function RestaurantsPage() {
                   </div>
                   <Switch />
                 </div>
-                <Button className="w-full">Kaydet</Button>
+                <Button className="w-full" onClick={() => toast.success("Restoran kaydedildi")}>
+                  Kaydet
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navItems } from "./navigation";
+import { getNavItems } from "./navigation";
 import { cn } from "@/lib/utils";
+import { getAuthUser } from "@/lib/auth";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const user = getAuthUser();
+  const navItems = getNavItems(user?.role ?? "admin");
   return (
     <aside className="hidden h-[calc(100vh-2rem)] w-64 shrink-0 flex-col rounded-3xl border border-border/70 bg-card/80 p-4 shadow-soft lg:flex">
       <div className="flex items-center gap-3 px-2">

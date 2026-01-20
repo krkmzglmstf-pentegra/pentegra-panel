@@ -63,3 +63,18 @@ export type DashboardSnapshot = {
     detail: string;
   }>;
 };
+
+export type RestaurantDashboardSnapshot = {
+  stats: {
+    todaysOrders: number;
+    pendingOrders: number;
+    inDelivery: number;
+    avgPrepMinutes: number;
+  };
+  liveOrders: Order[];
+  courierStatus: {
+    online: number;
+    offline: number;
+    break: number;
+  };
+};

@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PlatformBadge } from "@/components/shared/platform-badge";
+import { toast } from "sonner";
 
 export default function OrdersPage() {
   const [selected, setSelected] = React.useState<Order | null>(null);
@@ -33,7 +34,7 @@ export default function OrdersPage() {
       <PageHeader
         title="Siparisler"
         description="Platformlardan gelen siparisleri filtreleyin ve aksiyon alin."
-        action={<Button>Yeni Siparis</Button>}
+        action={<Button onClick={() => toast.success("Yeni siparis olusturuldu")}>Yeni Siparis</Button>}
       />
 
       <Card className="p-4">
@@ -97,8 +98,10 @@ export default function OrdersPage() {
                 <TableCell>
                   <StatusBadge status={order.status} />
                 </TableCell>
-                <TableCell>{order.totalPrice.toFixed(2)} ₺</TableCell>
-                <TableCell>{new Date(order.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</TableCell>
+                <TableCell>{order.totalPrice.toFixed(2)} TL</TableCell>
+                <TableCell>
+                  {new Date(order.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" onClick={() => setSelected(order)}>
                     Detay
@@ -131,10 +134,16 @@ export default function OrdersPage() {
                 <StatusBadge status={selected.status} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Button>Onayla</Button>
-                <Button variant="outline">Reddet</Button>
-                <Button variant="secondary">Atama</Button>
-                <Button variant="ghost">Yazdir</Button>
+                <Button onClick={() => toast.success("Siparis onaylandi")}>Onayla</Button>
+                <Button variant="outline" onClick={() => toast.error("Siparis reddedildi")}>
+                  Reddet
+                </Button>
+                <Button variant="secondary" onClick={() => toast.success("Kurye atamasi baslatildi")}>
+                  Atama
+                </Button>
+                <Button variant="ghost" onClick={() => toast.success("Yazdirma kuyruga eklendi")}>
+                  Yazdir
+                </Button>
               </div>
             </div>
           )}

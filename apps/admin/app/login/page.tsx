@@ -13,11 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { saveAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 const schema = z.object({
   email: z.string().email("Gecerli bir e-posta girin."),
   password: z.string().min(6, "Sifre en az 6 karakter olmali."),
-  remember: z.boolean().default(true)
+  remember: z.boolean().default(true),
+  role: z.enum(["admin", "restaurant"])
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -35,7 +37,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", remember: true }
+    defaultValues: { email: "", password: "", remember: true, role: "admin" }
   });
 
   const remember = watch("remember");
@@ -50,13 +52,20 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         setError("Giris basarisiz. Bilgileri kontrol edin.");
+        toast.error("Giris basarisiz");
         return;
       }
-      const data = (await res.json()) as { token: string; user: { id: string; name: string; tenant: string } };
-      saveAuth(data.token, { ...data.user, role: "admin" });
-      router.replace("/app/dashboard");
+      const data = (await res.json()) as { token: string; user: { id: string; name: string; tenant: string; restaurant?: string } };
+      saveAuth(data.token, {
+        ...data.user,
+        role: values.role,
+        restaurant: data.user.restaurant
+      });
+      toast.success("Giris basarili");
+      router.replace(values.role === "restaurant" ? "/app/restaurant/dashboard" : "/app/dashboard");
     } catch {
       setError("Sunucuya baglanilamadi. Lutfen tekrar deneyin.");
+      toast.error("Baglanti hatasi");
     }
   };
 
@@ -108,6 +117,26 @@ export default function LoginPage() {
           )}
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { key: "admin", title: "Admin", desc: "Tum operasyonu yonet" },
+                { key: "restaurant", title: "Restoran", desc: "Siparislerini takip et" }
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                    watch("role") === item.key
+                      ? "border-transparent bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                  onClick={() => setValue("role", item.key as "admin" | "restaurant")}
+                >
+                  <p className="text-base font-semibold">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </button>
+              ))}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
               <div className="relative">
