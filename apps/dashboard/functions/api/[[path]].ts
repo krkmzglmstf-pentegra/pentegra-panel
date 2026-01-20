@@ -1,8 +1,7 @@
 export async function onRequest({ request, env }: { request: Request; env: { API_ORIGIN?: string } }) {
   const origin = env.API_ORIGIN ?? 'https://pentegra-api.krkmzglmstf.workers.dev';
   const url = new URL(request.url);
-  const path = url.pathname.replace(/^\/api/, '') || '/';
-  const targetUrl = new URL(path + url.search, origin);
+  const targetUrl = new URL(url.pathname + url.search, origin);
 
   const headers = new Headers(request.headers);
   headers.delete('host');
