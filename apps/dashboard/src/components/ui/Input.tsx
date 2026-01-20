@@ -14,7 +14,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? React.useId();
     return (
       <label htmlFor={inputId} className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-        <span className="sr-only">{label}</span>
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+          {label}
+        </span>
         <div className="relative">
           {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>}
           <input
