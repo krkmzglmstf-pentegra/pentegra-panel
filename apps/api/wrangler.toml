@@ -1,0 +1,28 @@
+name = "pentegra-api"
+main = "src/index.ts"
+compatibility_date = "2026-01-20"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+LOG_LEVEL = "info"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pentegra_db"
+database_id = "__YOUR_D1_DATABASE_ID__"
+
+[[queues.producers]]
+binding = "ORDER_QUEUE"
+queue = "order-queue"
+
+[[queues.consumers]]
+queue = "order-queue"
+max_batch_size = 10
+max_batch_timeout = 5
+
+[durable_objects]
+bindings = [
+  { name = "TOKEN_BROKER", class_name = "TokenBroker" },
+  { name = "TENANT_DISPATCHER", class_name = "TenantDispatcher" },
+  { name = "STREAM", class_name = "Stream" }
+]

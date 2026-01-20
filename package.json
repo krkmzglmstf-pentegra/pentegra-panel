@@ -1,0 +1,27 @@
+{
+  "name": "pentegra-panel",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/dashboard",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:dashboard": "npm --workspace apps/dashboard run dev",
+    "dev": "npm run dev:api",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.0"
+  }
+}

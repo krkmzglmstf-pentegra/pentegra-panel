@@ -1,0 +1,24 @@
+{
+  "name": "@pentegra/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "d1:apply": "wrangler d1 migrations apply pentegra_db",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@pentegra/shared": "workspace:*",
+    "hono": "^4.6.5",
+    "jose": "^5.2.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240120.0",
+    "@types/node": "^20.11.30",
+    "better-sqlite3": "^11.2.0"
+  }
+}

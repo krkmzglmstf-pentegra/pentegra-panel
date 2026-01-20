@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #f5f1ea;
+  --ink: #1d1b19;
+  --accent: #ef6a3c;
+  --accent-2: #2a9d8f;
+  --panel: #fff8f1;
+  --muted: #6c6a66;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 10% 10%, #ffe7d9 0%, transparent 55%),
+    radial-gradient(circle at 90% 20%, #e4f7f1 0%, transparent 60%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.brand {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+.card {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.08);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.button {
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  padding: 10px 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: var(--accent-2);
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  margin-top: 6px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.small {
+  color: var(--muted);
+  font-size: 12px;
+}
