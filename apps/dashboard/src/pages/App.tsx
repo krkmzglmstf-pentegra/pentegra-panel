@@ -25,7 +25,10 @@ export function App() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [events, setEvents] = useState<string[]>([]);
+  const [loginState, setLoginState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+  const [loginError, setLoginError] = useState<string>('');
 
   useEffect(() => {
     if (!token) {
@@ -79,9 +82,12 @@ export function App() {
   }, [token, me]);
 
   const roleLabel = useMemo(() => (me ? `${me.role}` : 'guest'), [me]);
+  const greetingName = useMemo(() => (me ? me.user_id.slice(0, 6) : 'Kullanici'), [me]);
 
   async function login(event: React.FormEvent) {
     event.preventDefault();
+    setLoginState('loading');
+    setLoginError('');
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,6 +97,10 @@ export function App() {
     if (data.ok && data.data?.token) {
       localStorage.setItem('token', data.data.token);
       setToken(data.data.token);
+      setLoginState('success');
+    } else {
+      setLoginState('error');
+      setLoginError(data.error?.message ?? 'Giris basarisiz');
     }
   }
 
@@ -98,135 +108,190 @@ export function App() {
     localStorage.removeItem('token');
     setToken(null);
     setMe(null);
+    setLoginState('idle');
   }
 
   return (
-    <div className="page">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">P</span>
-          Pentegra Ops
-        </div>
-        <div className="topbar-right">
-          <span className="pill">{roleLabel}</span>
-          {token && (
-            <button className="button ghost" onClick={logout}>
-              Cikis
-            </button>
-          )}
-        </div>
-      </header>
-
+    <div className="app-shell" data-theme="light">
       {!token && (
-        <main className="login-grid">
-          <section className="hero card">
-            <div className="hero-tag">B2B Multi-Tenant</div>
-            <h1>Order pool, auto-approve, auto-assign.</h1>
-            <p>
-              Single panel for restaurants, courier fleet, and live order stream. Fast, stable,
-              production-grade.
-            </p>
-            <div className="hero-stats">
-              <div>
-                <strong>3</strong>
-                <span>Platform</span>
-              </div>
-              <div>
-                <strong>1-50</strong>
-                <span>Restaurant</span>
-              </div>
-              <div>
-                <strong>1-10+</strong>
-                <span>Courier</span>
-              </div>
+        <div className="login-screen">
+          <div className="login-card">
+            <div className="login-hero">
+              <div className="login-logo">KuryeTakip</div>
             </div>
-          </section>
-          <section className="card login-card">
-            <h2>Giris</h2>
-            <p className="small">Admin veya restoran hesabinizla devam edin.</p>
-            <form onSubmit={login} className="form">
-              <label>
+
+            <form onSubmit={login} className="login-form">
+              <label className="field">
                 E-posta
                 <input
-                  className="input"
+                  className={`input ${loginState === 'error' ? 'input-error' : ''}`}
+                  type="email"
+                  placeholder="ornek@firma.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ornek@firma.com"
                 />
+                {loginState === 'error' && loginError && (
+                  <span className="field-error">{loginError}</span>
+                )}
               </label>
-              <label>
+
+              <label className="field">
                 Sifre
-                <input
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="********"
-                />
+                <div className="password-wrapper">
+                  <input
+                    className={`input ${loginState === 'error' ? 'input-error' : ''}`}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="********"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-password"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? 'Gizle' : 'Goster'}
+                  </button>
+                </div>
               </label>
-              <button className="button" type="submit">
-                Giris Yap
+
+              <button
+                className={`login-btn ${loginState === 'success' ? 'success' : ''}`}
+                type="submit"
+                disabled={loginState === 'loading'}
+              >
+                {loginState === 'loading'
+                  ? 'Giris Yapiliyor...'
+                  : loginState === 'success'
+                    ? 'Basarili'
+                    : 'Giris Yap'}
               </button>
+
+              <div className="separator">veya</div>
+
+              <button type="button" className="social-btn">
+                Google ile devam et
+              </button>
+              <button type="button" className="social-btn">
+                Apple ile devam et
+              </button>
+
+              <div className="links">
+                <a className="link" href="#">
+                  Sifremi unuttum
+                </a>
+                <span className="muted">Hesabin yok?</span>
+                <a className="link bold" href="#">
+                  Kayit ol
+                </a>
+              </div>
             </form>
-            <div className="hint">Test hesaplari README icinde.</div>
-          </section>
-        </main>
+          </div>
+        </div>
       )}
 
       {token && me && (
-        <main className="dashboard">
-          <section className="card identity">
-            <div className="identity-header">
-              <div>
-                <h3>Hizli Ozet</h3>
-                <p className="small">Bugun gelen siparis akisi ve durumlar.</p>
-              </div>
-              <span className="pill">{me.tenant_id ?? 'tenant'}</span>
+        <div className="dashboard-layout">
+          <header className="header-bar">
+            <div className="header-left">
+              <h1 className="greeting">
+                Merhaba, {greetingName}!
+                <span className={`status-badge ${events.length ? 'online' : 'offline'}`}>
+                  {events.length ? 'online' : 'offline'}
+                </span>
+              </h1>
             </div>
-            <div className="stats">
-              <div className="stat">
-                <span>Toplam</span>
-                <strong>{orders.length}</strong>
-              </div>
-              <div className="stat">
-                <span>Aktif</span>
-                <strong>{orders.filter((o) => o.status !== 'COMPLETED').length}</strong>
-              </div>
-              <div className="stat">
-                <span>Tamam</span>
-                <strong>{orders.filter((o) => o.status === 'COMPLETED').length}</strong>
-              </div>
+            <div className="header-right">
+              <button className="notification">
+                Bildirim
+                <span className="badge-count">3</span>
+              </button>
+              <button className="ghost-btn" onClick={logout}>
+                Cikis
+              </button>
+              <span className="pill">{roleLabel}</span>
             </div>
-          </section>
+          </header>
 
-          <section className="card orders">
-            <h3>Siparisler</h3>
-            <div className="list">
-              {orders.length === 0 && <div className="small">Henuz siparis yok.</div>}
+          <aside className="sidebar">
+            <div className="sidebar-brand">KuryeTakip</div>
+            <nav className="nav-links">
+              <a className="nav-item active" href="#">
+                Dashboard
+              </a>
+              <a className="nav-item" href="#">
+                Siparisler
+              </a>
+              <a className="nav-item" href="#">
+                Kuryeler
+              </a>
+              <a className="nav-item" href="#">
+                Ayarlar
+              </a>
+            </nav>
+          </aside>
+
+          <main className="main-content">
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="icon-circle">??</div>
+                <div className="value">{orders.length}</div>
+                <div className="label">Toplam Siparis</div>
+              </div>
+              <div className="stat-card">
+                <div className="icon-circle blue">?</div>
+                <div className="value">{orders.filter((o) => o.status === 'COMPLETED').length}</div>
+                <div className="label">Teslim Edilen</div>
+              </div>
+            </div>
+
+            <div className="map-container">
+              <div id="map">Harita alani</div>
+              <button className="my-location">?</button>
+            </div>
+
+            <h2 className="section-title">Aktif Siparisler</h2>
+            <div className="orders-list">
+              {orders.length === 0 && <div className="empty">Aktif siparis yok.</div>}
               {orders.map((order) => (
-                <div key={order.id} className="order-row">
-                  <div>
-                    <div className="order-id">{order.platform_order_id}</div>
-                    <div className="small">{order.platform}</div>
+                <div key={order.id} className="order-item">
+                  <div className="order-info">
+                    <h3 className="restaurant-name">{order.platform}</h3>
+                    <div className="order-meta">
+                      <span className="time">#{order.platform_order_id}</span>
+                      <span className="distance">{new Date(order.created_at).toLocaleTimeString()}</span>
+                    </div>
                   </div>
-                  <span className="pill">{order.status}</span>
+                  <div className="order-status">
+                    <span className="status-badge pending">{order.status}</span>
+                  </div>
+                  <button className="accept-order">Kabul</button>
                 </div>
               ))}
             </div>
-          </section>
+          </main>
 
-          <section className="card">
-            <h3>Canli Akis (SSE)</h3>
-            <div className="list">
-              {events.length === 0 && <div className="small">Henuz event yok.</div>}
-              {events.map((evt, idx) => (
-                <div key={idx} className="event-row">
-                  {evt}
-                </div>
-              ))}
-            </div>
-          </section>
-        </main>
+          <nav className="bottom-nav">
+            <a className="nav-item active" href="#">
+              <div className="icon">??</div>
+              <span className="label">Ana</span>
+            </a>
+            <a className="nav-item" href="#">
+              <div className="icon">??</div>
+              <span className="label">Siparis</span>
+            </a>
+            <a className="nav-item" href="#">
+              <div className="icon">??</div>
+              <span className="label">Kurye</span>
+            </a>
+            <a className="nav-item" href="#">
+              <div className="icon">??</div>
+              <span className="label">Ayar</span>
+            </a>
+          </nav>
+
+          <button className="fab">+</button>
+        </div>
       )}
     </div>
   );
