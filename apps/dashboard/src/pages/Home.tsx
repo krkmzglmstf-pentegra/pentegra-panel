@@ -3,8 +3,7 @@ import { LoginCard, type LoginRole, type LoginValues } from '../components/auth/
 import { DashboardHome } from '../components/home/DashboardHome';
 import { PublicHomeLayout } from '../layouts/PublicHomeLayout';
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ?? 'https://pentegra-api.krkmzglmstf.workers.dev/api';
+const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 type Me = {
   user_id: string;
@@ -123,10 +122,11 @@ export function Home() {
       } catch {
         data = null;
       }
-      if (res.ok && data?.ok && data.data?.token) {
-        const session = { token: data.data.token, remember: rememberMe };
+      const tokenValue = data?.data?.token ?? (data as { token?: string } | null)?.token;
+      if (res.ok && tokenValue) {
+        const session = { token: tokenValue, remember: rememberMe };
         persistSession(session);
-        setToken(data.data.token);
+        setToken(tokenValue);
         return;
       }
       setLoginError(data?.error?.message ?? 'E-posta veya sifre hatali.');
