@@ -78,5 +78,16 @@ Optional dev fallbacks:
 npm test
 ```
 
+## Demo users (seed)
+Seed SQL file: `apps/api/scripts/seed.sql`
+```powershell
+cd .\apps\api
+wrangler d1 execute pentegra_db --file .\scripts\seed.sql --remote
+```
+
+Demo credentials:
+- Admin: `admin@demo.local` / `Admin123!`
+- Restaurant: `restoran@demo.local` / `Restoran123!`
+
 ## Warning
 Never store real `x-api-key`, basic auth, tokens, or secrets in repo. Use D1 ciphertext or `wrangler secret`.

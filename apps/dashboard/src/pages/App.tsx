@@ -9,11 +9,20 @@ type Me = {
 
 type ApiResponse<T> = { ok: boolean; data?: T; error?: { code: string; message: string } };
 
+type Order = {
+  id: string;
+  platform: string;
+  platform_order_id: string;
+  status: string;
+  created_at: string;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 export function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [me, setMe] = useState<Me | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [events, setEvents] = useState<string[]>([]);
@@ -37,6 +46,20 @@ export function App() {
       })
       .catch(() => setMe(null));
   }, [token]);
+
+  useEffect(() => {
+    if (!token || !me) return;
+    const endpoint =
+      me.role === 'admin' || me.role === 'ops'
+        ? `${API_BASE}/admin/orders`
+        : `${API_BASE}/restaurant/orders`;
+    fetch(endpoint, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => res.json() as Promise<ApiResponse<Order[]>>)
+      .then((res) => setOrders(res.data ?? []))
+      .catch(() => setOrders([]));
+  }, [token, me]);
 
   useEffect(() => {
     if (!token || !me) return;
@@ -78,61 +101,132 @@ export function App() {
   }
 
   return (
-    <div className="container">
-      <div className="header">
-        <div className="brand">PENTEGRA PANEL</div>
-        <div className="tag">{roleLabel}</div>
-      </div>
+    <div className="page">
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark">P</span>
+          Pentegra Ops
+        </div>
+        <div className="topbar-right">
+          <span className="pill">{roleLabel}</span>
+          {token && (
+            <button className="button ghost" onClick={logout}>
+              Cikis
+            </button>
+          )}
+        </div>
+      </header>
 
       {!token && (
-        <div className="card" style={{ maxWidth: 420 }}>
-          <h2>Giris</h2>
-          <form onSubmit={login}>
-            <label>
-              E-posta
-              <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </label>
-            <label>
-              Sifre
-              <input
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
-            <div style={{ marginTop: 16 }}>
+        <main className="login-grid">
+          <section className="hero card">
+            <div className="hero-tag">B2B Multi-Tenant</div>
+            <h1>Order pool, auto-approve, auto-assign.</h1>
+            <p>
+              Single panel for restaurants, courier fleet, and live order stream. Fast, stable,
+              production-grade.
+            </p>
+            <div className="hero-stats">
+              <div>
+                <strong>3</strong>
+                <span>Platform</span>
+              </div>
+              <div>
+                <strong>1-50</strong>
+                <span>Restaurant</span>
+              </div>
+              <div>
+                <strong>1-10+</strong>
+                <span>Courier</span>
+              </div>
+            </div>
+          </section>
+          <section className="card login-card">
+            <h2>Giris</h2>
+            <p className="small">Admin veya restoran hesabinizla devam edin.</p>
+            <form onSubmit={login} className="form">
+              <label>
+                E-posta
+                <input
+                  className="input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ornek@firma.com"
+                />
+              </label>
+              <label>
+                Sifre
+                <input
+                  className="input"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                />
+              </label>
               <button className="button" type="submit">
                 Giris Yap
               </button>
-            </div>
-          </form>
-        </div>
+            </form>
+            <div className="hint">Test hesaplari README icinde.</div>
+          </section>
+        </main>
       )}
 
       {token && me && (
-        <div className="grid">
-          <div className="card">
-            <h3>Kimlik</h3>
-            <div className="list">
-              <div>ID: {me.user_id}</div>
-              <div>Tenant: {me.tenant_id ?? '-'}</div>
-              <div>Restaurant: {me.restaurant_id ?? '-'}</div>
+        <main className="dashboard">
+          <section className="card identity">
+            <div className="identity-header">
+              <div>
+                <h3>Hizli Ozet</h3>
+                <p className="small">Bugun gelen siparis akisi ve durumlar.</p>
+              </div>
+              <span className="pill">{me.tenant_id ?? 'tenant'}</span>
             </div>
-            <button className="button secondary" style={{ marginTop: 16 }} onClick={logout}>
-              Cikis
-            </button>
-          </div>
-          <div className="card">
-            <h3>Canli Akis (SSE)</h3>
+            <div className="stats">
+              <div className="stat">
+                <span>Toplam</span>
+                <strong>{orders.length}</strong>
+              </div>
+              <div className="stat">
+                <span>Aktif</span>
+                <strong>{orders.filter((o) => o.status !== 'COMPLETED').length}</strong>
+              </div>
+              <div className="stat">
+                <span>Tamam</span>
+                <strong>{orders.filter((o) => o.status === 'COMPLETED').length}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="card orders">
+            <h3>Siparisler</h3>
             <div className="list">
-              {events.length === 0 && <div className="small">Hen?z event yok.</div>}
-              {events.map((evt, idx) => (
-                <div key={idx}>{evt}</div>
+              {orders.length === 0 && <div className="small">Henuz siparis yok.</div>}
+              {orders.map((order) => (
+                <div key={order.id} className="order-row">
+                  <div>
+                    <div className="order-id">{order.platform_order_id}</div>
+                    <div className="small">{order.platform}</div>
+                  </div>
+                  <span className="pill">{order.status}</span>
+                </div>
               ))}
             </div>
-          </div>
-        </div>
+          </section>
+
+          <section className="card">
+            <h3>Canli Akis (SSE)</h3>
+            <div className="list">
+              {events.length === 0 && <div className="small">Henuz event yok.</div>}
+              {events.map((evt, idx) => (
+                <div key={idx} className="event-row">
+                  {evt}
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
       )}
     </div>
   );
