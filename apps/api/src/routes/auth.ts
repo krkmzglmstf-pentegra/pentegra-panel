@@ -23,7 +23,14 @@ authRoutes.post('/login', async (c) => {
     const parsed = LoginRequestSchema.safeParse(body);
     if (!parsed.success) {
       return c.json(
-        { ok: false, error: { code: ErrorCodes.VALIDATION, message: 'invalid payload' } },
+        {
+          ok: false,
+          error: {
+            code: ErrorCodes.VALIDATION,
+            message: 'invalid payload',
+            details: parsed.error.flatten()
+          }
+        },
         400
       );
     }
