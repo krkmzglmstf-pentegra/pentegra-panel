@@ -56,7 +56,12 @@ export default function LoginPage() {
         return;
       }
       const data = (await res.json()) as { ok?: boolean; data?: { token?: string } } | { token?: string };
-      const token = "data" in data ? data.data?.token : data.token;
+      let token: string | undefined;
+      if ("data" in data) {
+        token = data.data?.token;
+      } else {
+        token = data.token;
+      }
       if (!token) {
         setError("Token alinamadi. Lutfen tekrar deneyin.");
         toast.error("Giris basarisiz");
