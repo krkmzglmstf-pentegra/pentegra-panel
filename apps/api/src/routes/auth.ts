@@ -11,9 +11,10 @@ authRoutes.post('/login', async (c) => {
   try {
     const raw = await c.req.text();
     let body: unknown;
-    try {
-      body = JSON.parse(raw);
-    } catch {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('{')) {
+      body = JSON.parse(trimmed);
+    } else {
       const params = new URLSearchParams(raw);
       body = {
         email: params.get('email'),
