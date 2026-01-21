@@ -14,12 +14,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export default function CouriersPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["couriers"],
-    queryFn: () => apiGet<Courier[]>("/api/mock/couriers")
+    queryFn: () => apiGet<Courier[] | { items: Courier[] }>("/api/admin/couriers")
   });
 
+  const couriers = Array.isArray(data) ? data : data?.items ?? [];
+
   if (isLoading) return <LoadingBlock />;
-  if (isError || !data) {
-    return <EmptyState title="Kuryeler yuklenemedi" description="Mock API erisimi saglanamadi." />;
+  if (isError || couriers.length === 0) {
+    return <EmptyState title="Kuryeler yuklenemedi" description="Kurye verisine ulasilamadi." />;
   }
 
   return (
@@ -41,7 +43,7 @@ export default function CouriersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((courier) => (
+              {couriers.map((courier) => (
                 <TableRow key={courier.id}>
                   <TableCell className="font-medium">{courier.name}</TableCell>
                   <TableCell>

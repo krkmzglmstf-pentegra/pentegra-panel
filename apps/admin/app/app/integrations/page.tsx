@@ -1,8 +1,9 @@
 "use client";
 
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
-import type { Integration } from "@/types";
+import type { Integration, Restaurant } from "@/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LoadingBlock } from "@/components/shared/loading-block";
@@ -14,15 +15,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
+type IntegrationPayload = Partial<Integration> & {
+  api_key_masked?: string;
+  api_secret_masked?: string;
+  token_status?: Integration["tokenStatus"];
+  last_checked?: string;
+};
+
+function normalizeIntegration(item: IntegrationPayload): Integration {
+  return {
+    platform: item.platform ?? "Getir",
+    apiKeyMasked: item.apiKeyMasked ?? item.api_key_masked ?? "••••••••",
+    apiSecretMasked: item.apiSecretMasked ?? item.api_secret_masked ?? "••••••••",
+    tokenStatus: item.tokenStatus ?? item.token_status ?? "baglanti yok",
+    lastChecked: item.lastChecked ?? item.last_checked ?? "—"
+  };
+}
+
 export default function IntegrationsPage() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["integrations"],
-    queryFn: () => apiGet<Integration[]>("/api/mock/integrations")
+  const { data: restaurants, isLoading: restaurantsLoading } = useQuery({
+    queryKey: ["restaurants"],
+    queryFn: () => apiGet<Restaurant[] | { items: Restaurant[] }>("/api/admin/restaurants")
   });
 
-  if (isLoading) return <LoadingBlock />;
-  if (isError || !data) {
-    return <EmptyState title="Entegrasyonlar yuklenemedi" description="Mock API erisimi saglanamadi." />;
+  const restaurantList = Array.isArray(restaurants) ? restaurants : restaurants?.items ?? [];
+  const [selectedRestaurant, setSelectedRestaurant] = React.useState<string | undefined>(
+    restaurantList[0]?.id
+  );
+
+  React.useEffect(() => {
+    if (!selectedRestaurant && restaurantList.length > 0) {
+      setSelectedRestaurant(restaurantList[0].id);
+    }
+  }, [restaurantList, selectedRestaurant]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["integrations", selectedRestaurant],
+    queryFn: () =>
+      apiGet<IntegrationPayload[] | { items: IntegrationPayload[] }>(
+        `/api/admin/integrations?restaurantId=${selectedRestaurant ?? ""}`
+      ),
+    enabled: !!selectedRestaurant
+  });
+
+  const integrations = Array.isArray(data) ? data : data?.items ?? [];
+
+  if (restaurantsLoading || isLoading) return <LoadingBlock />;
+  if (!selectedRestaurant) {
+    return <EmptyState title="Restoran bulunamadi" description="Once restoran ekleyin." />;
+  }
+  if (isError || integrations.length === 0) {
+    return <EmptyState title="Entegrasyonlar yuklenemedi" description="Entegrasyon verisine ulasilamadi." />;
   }
 
   return (
@@ -33,21 +76,25 @@ export default function IntegrationsPage() {
       />
 
       <Card className="p-4">
-        <Select defaultValue="r1">
+        <Select value={selectedRestaurant} onValueChange={setSelectedRestaurant}>
           <SelectTrigger className="w-full md:w-[320px]">
             <SelectValue placeholder="Restoran sec" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="r1">Burger House</SelectItem>
-            <SelectItem value="r2">Sushi Lab</SelectItem>
-            <SelectItem value="r3">Ankara Pizza</SelectItem>
+            {restaurantList.map((restaurant) => (
+              <SelectItem key={restaurant.id} value={restaurant.id}>
+                {restaurant.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {data.map((item) => (
-          <Card key={item.platform} className="p-6 space-y-4">
+        {integrations.map((raw) => {
+          const item = normalizeIntegration(raw);
+          return (
+            <Card key={item.platform} className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">{item.platform}</h3>
               <Badge
@@ -80,7 +127,8 @@ export default function IntegrationsPage() {
               <Button onClick={() => toast.success("Entegrasyon guncellendi")}>Kaydet</Button>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

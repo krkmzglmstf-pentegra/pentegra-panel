@@ -12,5 +12,9 @@ export async function apiGet<T>(path: string): Promise<T> {
     }
     throw new Error("API error");
   }
-  return (await res.json()) as T;
+  const payload = (await res.json()) as unknown;
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
 }
