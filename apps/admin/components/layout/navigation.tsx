@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, Store, Truck, Activity, Settings, BarChart3 } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Store, Truck, Activity, Settings, BarChart3, Plug } from "lucide-react";
 
 export const adminNavItems = [
   { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
@@ -12,6 +12,7 @@ export const restaurantNavItems = [
   { label: "Dashboard", href: "/app/restaurant/dashboard", icon: LayoutDashboard },
   { label: "Siparislerim", href: "/app/restaurant/orders", icon: ClipboardList },
   { label: "Canli Takip", href: "/app/restaurant/live", icon: Activity },
+  { label: "Entegrasyonlar", href: "/app/restaurant/integrations", icon: Plug },
   { label: "Ayarlar", href: "/app/restaurant/settings", icon: Settings }
 ];
 
