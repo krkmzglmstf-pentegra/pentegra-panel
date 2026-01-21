@@ -19,7 +19,6 @@ const schema = z.object({
   email: z.string().email("Gecerli bir e-posta girin."),
   password: z.string().min(6, "Sifre en az 6 karakter olmali."),
   remember: z.boolean().default(true),
-  role: z.enum(["admin", "restaurant"])
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -37,7 +36,7 @@ export default function LoginPage() {
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", remember: true, role: "admin" }
+    defaultValues: { email: "", password: "", remember: true }
   });
 
   const remember = watch("remember");
@@ -77,14 +76,18 @@ export default function LoginPage() {
       }
       const mePayload = (await meRes.json()) as { ok?: boolean; data?: any } | any;
       const me = "data" in mePayload ? mePayload.data : mePayload;
+      const rawRole = typeof me?.role === "string" ? me.role : typeof me?.user_role === "string" ? me.user_role : "";
+      const normalizedRole = rawRole.toLowerCase();
+      const derivedRole =
+        normalizedRole.includes("rest") || me?.restaurant_id ? "restaurant" : "admin";
       saveAuth(token, {
-        id: me.user_id,
-        role: me.role,
-        tenantId: me.tenant_id,
-        restaurantId: me.restaurant_id
+        id: me.user_id ?? me.id ?? me.userId ?? "unknown",
+        role: derivedRole,
+        tenantId: me.tenant_id ?? me.tenantId,
+        restaurantId: me.restaurant_id ?? me.restaurantId
       });
       toast.success("Giris basarili");
-      router.replace(me.role === "restaurant" ? "/app/restaurant/dashboard" : "/app/dashboard");
+      router.replace(derivedRole === "restaurant" ? "/app/restaurant/dashboard" : "/app/dashboard");
     } catch {
       setError("Sunucuya baglanilamadi. Lutfen tekrar deneyin.");
       toast.error("Baglanti hatasi");
