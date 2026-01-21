@@ -19,6 +19,7 @@ const schema = z.object({
   email: z.string().email("Gecerli bir e-posta girin."),
   password: z.string().min(6, "Sifre en az 6 karakter olmali."),
   remember: z.boolean().default(true),
+  role: z.enum(["admin", "restaurant"])
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -36,10 +37,11 @@ export default function LoginPage() {
     formState: { errors, isSubmitting }
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", remember: true }
+    defaultValues: { email: "", password: "", remember: true, role: "admin" }
   });
 
   const remember = watch("remember");
+  const selectedRole = watch("role");
 
   const onSubmit = async (values: FormValues) => {
     setError(null);
@@ -47,7 +49,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: values.email, password: values.password })
+        body: JSON.stringify({ email: values.email, password: values.password, role: values.role })
       });
       if (!res.ok) {
         setError("Giris basarisiz. Bilgileri kontrol edin.");
@@ -79,7 +81,7 @@ export default function LoginPage() {
       const rawRole = typeof me?.role === "string" ? me.role : typeof me?.user_role === "string" ? me.user_role : "";
       const normalizedRole = rawRole.toLowerCase();
       const derivedRole =
-        normalizedRole.includes("rest") || me?.restaurant_id ? "restaurant" : "admin";
+        normalizedRole.includes("rest") || me?.restaurant_id ? "restaurant" : values.role;
       saveAuth(token, {
         id: me.user_id ?? me.id ?? me.userId ?? "unknown",
         role: derivedRole,
@@ -142,6 +144,33 @@ export default function LoginPage() {
           )}
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-2">
+              <Label>Kullanici Tipi</Label>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/60 bg-muted/40 p-1">
+                <button
+                  type="button"
+                  className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    selectedRole === "admin"
+                      ? "bg-card text-foreground shadow-soft"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setValue("role", "admin", { shouldValidate: true })}
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    selectedRole === "restaurant"
+                      ? "bg-card text-foreground shadow-soft"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setValue("role", "restaurant", { shouldValidate: true })}
+                >
+                  Restoran
+                </button>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
               <div className="relative">
