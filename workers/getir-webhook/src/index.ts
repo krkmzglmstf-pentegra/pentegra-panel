@@ -47,6 +47,27 @@ function pickFirst(obj: Record<string, unknown>, keys: string[]): string | null 
   return null;
 }
 
+function pickNestedId(payload: Record<string, unknown>, key: string): string | null {
+  const nested = payload[key];
+  if (!nested || typeof nested !== "object") return null;
+  const value = (nested as Record<string, unknown>).id;
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return null;
+}
+
+function pickNestedNumber(payload: Record<string, unknown>, key: string, nestedKey: string): number | null {
+  const nested = payload[key];
+  if (!nested || typeof nested !== "object") return null;
+  const value = (nested as Record<string, unknown>)[nestedKey];
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 function parseDeliveryType(payload: Record<string, unknown>): number | null {
   const value = payload.deliveryType ?? payload.delivery_type;
   if (typeof value === "number") return value;
@@ -78,21 +99,45 @@ async function handleNewOrder(request: Request, env: Env): Promise<Response> {
     pickFirst(payload, ["foodOrderId", "orderId", "id", "food_order_id"]) ??
     crypto.randomUUID();
 
-  const restaurantId = pickFirst(payload, ["restaurantId", "restaurant_id", "storeId", "store_id"]);
+  const restaurantId =
+    pickNestedId(payload, "restaurant") ??
+    pickFirst(payload, ["restaurantId", "restaurant_id", "storeId", "store_id", "platformRestaurantId", "platform_restaurant_id"]) ??
+    pickNestedId(payload, "store");
+  const tenantId = pickFirst(payload, ["tenantId", "tenant_id", "companyId", "company_id"]);
+  const platformRestaurantId =
+    pickFirst(payload, ["platformRestaurantId", "platform_restaurant_id"]) ?? restaurantId;
+  const clientLat = pickNestedNumber(payload, "client", "lat") ?? pickNestedNumber(payload, "location", "lat");
+  const clientLon = pickNestedNumber(payload, "client", "lon") ?? pickNestedNumber(payload, "location", "lon");
 
   const now = new Date().toISOString();
   const payloadJson = JSON.stringify(payload);
 
   await env.DB.prepare(
-    `INSERT INTO orders (platform, external_id, restaurant_id, delivery_type, status, payload_json, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO orders (platform, external_id, restaurant_id, tenant_id, platform_restaurant_id, client_lat, client_lon, delivery_type, status, payload_json, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(platform, external_id) DO UPDATE SET
        restaurant_id=excluded.restaurant_id,
+       tenant_id=excluded.tenant_id,
+       platform_restaurant_id=excluded.platform_restaurant_id,
+       client_lat=excluded.client_lat,
+       client_lon=excluded.client_lon,
        delivery_type=excluded.delivery_type,
        status=excluded.status,
        payload_json=excluded.payload_json`
   )
-    .bind("getir", externalId, restaurantId, deliveryType, "created", payloadJson, now)
+    .bind(
+      "getir",
+      externalId,
+      restaurantId,
+      tenantId,
+      platformRestaurantId,
+      clientLat,
+      clientLon,
+      deliveryType,
+      "created",
+      payloadJson,
+      now
+    )
     .run();
 
   return jsonResponse({ ok: true, externalId });
@@ -119,20 +164,44 @@ async function handleCancelOrder(request: Request, env: Env): Promise<Response> 
     pickFirst(payload, ["foodOrderId", "orderId", "id", "food_order_id"]) ??
     crypto.randomUUID();
 
-  const restaurantId = pickFirst(payload, ["restaurantId", "restaurant_id", "storeId", "store_id"]);
+  const restaurantId =
+    pickNestedId(payload, "restaurant") ??
+    pickFirst(payload, ["restaurantId", "restaurant_id", "storeId", "store_id", "platformRestaurantId", "platform_restaurant_id"]) ??
+    pickNestedId(payload, "store");
+  const tenantId = pickFirst(payload, ["tenantId", "tenant_id", "companyId", "company_id"]);
+  const platformRestaurantId =
+    pickFirst(payload, ["platformRestaurantId", "platform_restaurant_id"]) ?? restaurantId;
+  const clientLat = pickNestedNumber(payload, "client", "lat") ?? pickNestedNumber(payload, "location", "lat");
+  const clientLon = pickNestedNumber(payload, "client", "lon") ?? pickNestedNumber(payload, "location", "lon");
   const now = new Date().toISOString();
   const payloadJson = JSON.stringify(payload);
 
   await env.DB.prepare(
-    `INSERT INTO orders (platform, external_id, restaurant_id, delivery_type, status, payload_json, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO orders (platform, external_id, restaurant_id, tenant_id, platform_restaurant_id, client_lat, client_lon, delivery_type, status, payload_json, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(platform, external_id) DO UPDATE SET
        restaurant_id=excluded.restaurant_id,
+       tenant_id=excluded.tenant_id,
+       platform_restaurant_id=excluded.platform_restaurant_id,
+       client_lat=excluded.client_lat,
+       client_lon=excluded.client_lon,
        delivery_type=excluded.delivery_type,
        status=excluded.status,
        payload_json=excluded.payload_json`
   )
-    .bind("getir", externalId, restaurantId, deliveryType, "canceled", payloadJson, now)
+    .bind(
+      "getir",
+      externalId,
+      restaurantId,
+      tenantId,
+      platformRestaurantId,
+      clientLat,
+      clientLon,
+      deliveryType,
+      "canceled",
+      payloadJson,
+      now
+    )
     .run();
 
   return jsonResponse({ ok: true, externalId });
@@ -141,6 +210,10 @@ async function handleCancelOrder(request: Request, env: Env): Promise<Response> 
 type OrderRow = {
   external_id: string;
   restaurant_id: string | null;
+  tenant_id: string | null;
+  platform_restaurant_id: string | null;
+  client_lat: number | null;
+  client_lon: number | null;
   delivery_type: number | null;
   status: string;
   created_at: string;
@@ -156,7 +229,8 @@ async function handleGetOrders(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const restaurantId = url.searchParams.get("restaurantId");
 
-  let query = "SELECT external_id, restaurant_id, delivery_type, status, created_at FROM orders WHERE platform = ?";
+  let query =
+    "SELECT external_id, restaurant_id, tenant_id, platform_restaurant_id, client_lat, client_lon, delivery_type, status, created_at FROM orders WHERE platform = ?";
   const binds: unknown[] = ["getir"];
 
   if (restaurantId) {
@@ -170,6 +244,9 @@ async function handleGetOrders(request: Request, env: Env): Promise<Response> {
   const rows = (result.results ?? []).map((row) => ({
     id: row.external_id,
     restaurant_id: row.restaurant_id,
+    tenant_id: row.tenant_id,
+    platform_restaurant_id: row.platform_restaurant_id,
+    client_location: row.client_lat === null || row.client_lon === null ? null : { lat: row.client_lat, lon: row.client_lon },
     platform: "getir",
     status: mapStatus(row.status),
     created_at: row.created_at,
