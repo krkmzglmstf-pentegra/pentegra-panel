@@ -1,0 +1,12 @@
+name = "getir-webhook"
+compatibility_date = "2026-01-22"
+main = "src/index.ts"
+
+routes = [
+  { pattern = "getir.pentegra.com.tr/api/getir/*", zone_name = "pentegra.com.tr" }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "getir_orders"
+database_id = "2ef22824-6668-478e-86d0-2a6b6a5d3d44"
