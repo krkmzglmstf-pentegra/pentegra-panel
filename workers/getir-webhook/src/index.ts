@@ -138,10 +138,55 @@ async function handleCancelOrder(request: Request, env: Env): Promise<Response> 
   return jsonResponse({ ok: true, externalId });
 }
 
+type OrderRow = {
+  external_id: string;
+  restaurant_id: string | null;
+  delivery_type: number | null;
+  status: string;
+  created_at: string;
+};
+
+function mapStatus(status: string): string {
+  if (status === "created") return "RECEIVED";
+  if (status === "canceled") return "CANCELED";
+  return status.toUpperCase();
+}
+
+async function handleGetOrders(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const restaurantId = url.searchParams.get("restaurantId");
+
+  let query = "SELECT external_id, restaurant_id, delivery_type, status, created_at FROM orders WHERE platform = ?";
+  const binds: unknown[] = ["getir"];
+
+  if (restaurantId) {
+    query += " AND restaurant_id = ?";
+    binds.push(restaurantId);
+  }
+
+  query += " ORDER BY datetime(created_at) DESC LIMIT 200";
+
+  const result = await env.DB.prepare(query).bind(...binds).all<OrderRow>();
+  const rows = (result.results ?? []).map((row) => ({
+    id: row.external_id,
+    restaurant_id: row.restaurant_id,
+    platform: "getir",
+    status: mapStatus(row.status),
+    created_at: row.created_at,
+    delivery_provider: row.delivery_type === 2 ? "RESTAURANT" : "GETIR"
+  }));
+
+  return jsonResponse({ ok: true, data: rows });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    if (request.method === "GET" && path.endsWith("/api/getir/orders")) {
+      return handleGetOrders(request, env);
+    }
 
     if (request.method !== "POST") {
       return jsonResponse({ ok: false, error: "method_not_allowed" }, 405);

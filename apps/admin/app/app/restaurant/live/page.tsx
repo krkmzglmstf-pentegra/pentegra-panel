@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
+import { getAuthUser } from "@/lib/auth";
 import type { Order } from "@/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -11,9 +12,14 @@ import { PlatformBadge } from "@/components/shared/platform-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 
 export default function RestaurantLivePage() {
+  const user = getAuthUser();
+  const restaurantId = user?.restaurantId ?? "";
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["restaurant-live"],
-    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/restaurant/orders")
+    queryKey: ["restaurant-live", restaurantId],
+    queryFn: () =>
+      apiGet<{ ok: boolean; data: any[] }>(
+        `/api/restaurant/orders${restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ""}`
+      )
   });
 
   if (isLoading) return <LoadingBlock />;

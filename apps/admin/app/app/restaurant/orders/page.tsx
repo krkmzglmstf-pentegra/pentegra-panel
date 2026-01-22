@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
+import { getAuthUser } from "@/lib/auth";
 import type { Order } from "@/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -16,9 +17,14 @@ import { PlatformBadge } from "@/components/shared/platform-badge";
 import { toast } from "sonner";
 
 export default function RestaurantOrdersPage() {
+  const user = getAuthUser();
+  const restaurantId = user?.restaurantId ?? "";
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["restaurant-orders"],
-    queryFn: () => apiGet<{ ok: boolean; data: any[] }>("/api/restaurant/orders")
+    queryKey: ["restaurant-orders", restaurantId],
+    queryFn: () =>
+      apiGet<{ ok: boolean; data: any[] }>(
+        `/api/restaurant/orders${restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ""}`
+      )
   });
 
   if (isLoading) return <LoadingBlock />;
